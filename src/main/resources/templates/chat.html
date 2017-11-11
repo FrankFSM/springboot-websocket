@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Spring Boot + WebSocket +广播</title>
+  <script src="https://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+  <script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.js"></script>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000;">貌似你的浏览器不支持websocket</h2></noscript>
+<p>聊天室</p>
+
+<form id="wiselyForm">
+
+  <textarea rows="4" cols="60" name="text"></textarea>
+  <input type="submit"/>
+
+</form>
+
+<script type="text/javascript">
+  $("#wiselyForm").submit(function (e) {
+    e.preventDefault();
+    var text = $("#wiselyForm").find('textarea[name="text"]').val();
+    sendSpittler(text);
+  });
+
+  var sock = new SockJS("/endpointChat");
+  var stomp = Stomp.over(sock);
+  stomp.connect({}, function (frame) {
+    stomp.subscribe("/user/queue/notifications", handleNotification)
+  })
+
+  function handleNotification(message) {
+    $('#output').append("<b>Received: " + message.body + "</b><br/>")
+  }
+
+  function sendSpittler(text) {
+    stomp.send("/chat", {}, text)
+  }
+
+  $("#stop").click(function () {
+    sock.close();
+  })
+
+
+</script>
+
+<div id="output">
+</div>
+
+</body>
+
+</html>
